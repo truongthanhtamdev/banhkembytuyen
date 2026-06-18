@@ -632,7 +632,7 @@
 </section>
 
 <!-- PAYMENT -->
-<section class="section-pad" style="padding-top:0;">
+<section class="section-pad" style="padding-top:0;" id="payment">
   <div class="wrap">
     <div class="section-kicker">Step 2</div>
     <h2 class="section-title">Complete payment</h2>
@@ -697,6 +697,51 @@
     if(target){
       target.scrollIntoView({behavior:'smooth', block:'start'});
     }
+  });
+
+  // Submit booking via fetch so we stay on the page, then scroll to payment
+  var bookingForm = document.getElementById('bookingForm');
+  var formMsg = document.querySelector('.form-msg');
+  var originalMsgText = formMsg ? formMsg.textContent : '';
+
+  bookingForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    var submitBtn = bookingForm.querySelector('.submit-btn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
+
+    fetch(bookingForm.action, {
+      method: 'POST',
+      body: new FormData(bookingForm),
+      headers: { 'Accept': 'application/json' }
+    })
+    .then(function(response){
+      if(response.ok){
+        submitBtn.textContent = 'Booking sent ✓';
+        if(formMsg){
+          formMsg.textContent = "Thanks! We've received your request — now complete payment below to lock in your spot.";
+          formMsg.style.color = 'var(--deep-sea)';
+          formMsg.style.fontWeight = '700';
+        }
+        var paymentSection = document.getElementById('payment');
+        if(paymentSection){
+          setTimeout(function(){
+            paymentSection.scrollIntoView({behavior:'smooth', block:'start'});
+          }, 600);
+        }
+      } else {
+        throw new Error('Form submission failed');
+      }
+    })
+    .catch(function(){
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Submit booking request';
+      if(formMsg){
+        formMsg.textContent = "Something went wrong sending your request — please try again, or message us directly on Facebook.";
+        formMsg.style.color = 'var(--coral)';
+        formMsg.style.fontWeight = '700';
+      }
+    });
   });
 
   // Copy-to-clipboard helper (optional small enhancement, safe no-op if unsupported)
